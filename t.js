@@ -1,85 +1,16 @@
-// initialize express
-var express = require('express');
-var app = express();
-var fs = require('fs')
-var path = require('path')
-var server = require('http').createServer(app)
-const mongoose = require('mongoose')
-const cors = require('cors')
-mongoose.connect('mongodb+srv://nikunj05108:qwertylana@data.ulz8yxy.mongodb.net/?retryWrites=true&w=majority').then(data => {
-    console.log('DB CONNNECTED')
+const express= require('express')
+const https=require('https')
+const fs=require('fs')
+const path=require('path')
+const app=express();
+app.use('/',(req,res,next)=>{
+    res.send('hello I am SSL Server !')
 })
-
-const UserModel = require('./UserModel')
-app.use(express.json())
-
-app.use(
-    cors({
-        origin : "*"
-    })
-)
-
-const io =require('socket.io')(server, {
-    cors : {
-        origin : "*"
-    }
-})
-
-// app.post('/peers-data', (req, res) => {
-//     UserModel.find({socketID: {$ne: req.body.mySocketId}}, {status : false}).then(data => {
-//         console.log(data)
-//         res.send(data)
-//     })
-// })
-
-io.on('connection', (socket) => {
-    console.log(socket.id)
-
-    socket.on('data', (data) => {
-        UserModel.create({
-            peerID : data.myPeerId
-        })
-    })
-
-    socket.on('update', (data) => {
-        //console.log(data)
-        UserModel.updateMany({ "peerID" : {"$in" : data.peersCollection} }, {$set : {status : true}}).then(res => {
-            console.log('UPDATED')
-        })
-    })
-
-    socket.on('peersData', (data) => {
-        UserModel.find({"peerID": {"$ne": data.myPeerId}, "status": false}).then(res => {
-            socket.emit('peers', res)
-        })
-    })
-
-    socket.on('close_conn', () => {
-        socket.emit('close_stream')
-    })
-
-})
-
-
-
-
-// create express peer server
-var ExpressPeerServer = require('peer').ExpressPeerServer;
-
-var options = {
-    debug: true
+const options = {
+    key:fs.readFileSync(path.join(__dirname,'./cert/key.pem')),
+    cert:fs.readFileSync(path.join(__dirname,'./cert/cert.pem'))
 }
-
-// create a http server instance to listen to request
-
-let peer = ExpressPeerServer(server, options)
-
-
-
-// peerjs is the path that the peerjs server will be connected to.
-app.use('/peerjs', peer);
-// Now listen to your ip and port.
-
-
-
-server.listen(10000, "localhost");
+const sslServer=https.createServer(options,app);
+sslServer.listen(1337,()=>{
+    console.log('Secure server is listening on port 1337')
+})

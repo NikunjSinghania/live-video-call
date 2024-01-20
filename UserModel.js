@@ -3,18 +3,19 @@ const mongoose = require('mongoose')
 const { Schema } = mongoose
 
 const UserSchema = new Schema({
-    // socketID : {
-    //     type : String,
-    //     required : true
-    // },
-    peerID : {
+    socketID : {
         type : String,
+        unique : true,
         required : true
     },
-    status : {
-        type : Boolean,
-        required : true,
-        default : false
+    peerID : {
+        type : String,
+        unique : true,
+        required : true
+    },
+    roomID : {
+        type : String,
+        default : ""
     }
 })
 
